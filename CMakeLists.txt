@@ -24,9 +24,29 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+# Include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/ui
+    ${CMAKE_SOURCE_DIR}/src/utils
+)
+
+# Add source files
+set(SOURCES
+    src/main.cpp
+    # Additional source files will be added here
+)
+
+# Add resource files
+set(RESOURCES
+    # Resource files will be added here
+)
+
 # Add executable
 add_executable(${PROJECT_NAME}
-    src/main.cpp
+    ${SOURCES}
+    ${RESOURCES}
 )
 
 # Link Qt libraries
@@ -35,3 +55,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Network
 )
+
+# Enable testing
+enable_testing()

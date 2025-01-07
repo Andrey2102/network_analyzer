@@ -1,58 +1,37 @@
-# Qt-specific
-*.pro.user
-*.pro.user.*
-*.qmake.stash
+# Build directories
+/build/
+/debug/
+/release/
+
+# IDE specific
+.vscode/
+.idea/
+*.user
+*.autosave
+.cache/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Qt specific
 moc_*.cpp
 qrc_*.cpp
 ui_*.h
+*.qmlc
+*.jsc
 Makefile*
 *build-*
-*.qm
-.qmake.cache
-.qmake.stash
 
 # CMake
-CMakeLists.txt.user
 CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
+CMakeFiles/
+CMakeScripts/
+Testing/
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
-build/
-
-# C++ objects and libs
-*.slo
-*.lo
-*.o
-*.a
-*.la
-*.lai
-*.so
-*.so.*
-*.dll
-*.dylib
-
-# Debug/Release folders
-debug/
-release/
-
-# IDE-specific files
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS-specific
-.DS_Store
-.directory
-.Trash-*
-
-# Project-specific
-*.log
-*.json

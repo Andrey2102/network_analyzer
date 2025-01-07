@@ -36,11 +36,13 @@ include_directories(
 set(SOURCES
     src/main.cpp
     src/ui/windows/main_window.cpp
+    src/core/network_device.cpp
 )
 
 # Add resource files
 set(RESOURCES
     src/ui/windows/main_window.h
+    src/core/network_device.h
 )
 
 # Add executable

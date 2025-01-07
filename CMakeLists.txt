@@ -35,12 +35,12 @@ include_directories(
 # Add source files
 set(SOURCES
     src/main.cpp
-    # Additional source files will be added here
+    src/ui/windows/main_window.cpp
 )
 
 # Add resource files
 set(RESOURCES
-    # Resource files will be added here
+    src/ui/windows/main_window.h
 )
 
 # Add executable

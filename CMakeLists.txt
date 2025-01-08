@@ -37,12 +37,14 @@ set(SOURCES
     src/main.cpp
     src/ui/windows/main_window.cpp
     src/core/network_device.cpp
+    src/core/models/device_list_model.cpp
 )
 
 # Add resource files
 set(RESOURCES
     src/ui/windows/main_window.h
     src/core/network_device.h
+    src/core/models/device_list_model.h
 )
 
 # Add executable

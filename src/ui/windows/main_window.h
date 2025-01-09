@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAIN_WINDOW_H
+#define MAIN_WINDOW_H
 
 #include <QMainWindow>
 #include <QMenuBar>
@@ -9,13 +9,15 @@
 #include <QTextEdit>
 #include <QPushButton>
 #include <QLabel>
+#include "ui/views/ScanResultView.h"
+#include "ui/views/ButtonPanelView.h"
+#include "ui/views/InfoBarView.h"
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private:
@@ -26,31 +28,9 @@ private:
     void createCentralWidget();
 
 private:
-    // Menus
-    QMenu *fileMenu;
-    QMenu *scanMenu;
-    QMenu *helpMenu;
-    QToolBar *mainToolBar;
-    
-    // Central widget components
-    QWidget *centralWidget;
-    QVBoxLayout *mainLayout;
-    QGridLayout *infoLayout;
-    
-    // Info labels
-    QLabel *ipLabel;
-    QLabel *macLabel;
-    QLabel *otherLabel1;
-    QLabel *otherLabel2;
-    
-    // Operation result
-    QTextEdit *operationResult;
-    
-    // Buttons
-    QPushButton *scanButton;
-    QPushButton *pingButton;
-    QPushButton *exportCsvButton;
-    QPushButton *exportJsonButton;
+    ScanResultView* scanResultView;
+    ButtonPanelView* buttonPanelView;
+    InfoBarView* infoBarView;
 };
 
-#endif // MAINWINDOW_H
+#endif // MAIN_WINDOW_H

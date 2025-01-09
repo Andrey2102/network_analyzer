@@ -43,6 +43,7 @@ set(SOURCES
     src/ui/views/InfoBarView.cpp
     src/core/network_device.cpp
     src/core/network_scanner.cpp
+    src/core/models/device_list_model.cpp
 )
 
 # Add resource files
@@ -54,6 +55,7 @@ set(RESOURCES
     src/ui/views/InfoBarView.h
     src/core/network_device.h
     src/core/network_scanner.h
+    src/core/models/device_list_model.h
 )
 
 # Add executable

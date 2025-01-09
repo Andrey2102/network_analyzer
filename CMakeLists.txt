@@ -36,6 +36,7 @@ include_directories(
 set(SOURCES
     src/main.cpp
     src/ui/windows/main_window.cpp
+    src/core/models/device_list_model.cpp
     src/core/network_device.cpp
     src/core/network_scanner.cpp
 )
@@ -43,6 +44,7 @@ set(SOURCES
 # Add resource files
 set(RESOURCES
     src/ui/windows/main_window.h
+    src/core/models/device_list_model.h
     src/core/network_device.h
     src/core/network_scanner.h
 )

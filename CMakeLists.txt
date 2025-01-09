@@ -29,6 +29,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/core
     ${CMAKE_SOURCE_DIR}/src/ui
+    ${CMAKE_SOURCE_DIR}/src/ui/view
+    ${CMAKE_SOURCE_DIR}/src/ui/views
     ${CMAKE_SOURCE_DIR}/src/utils
 )
 
@@ -36,14 +38,23 @@ include_directories(
 set(SOURCES
     src/main.cpp
     src/ui/windows/main_window.cpp
+    src/ui/views/ScanResultView.cpp
+    src/ui/views/ButtonPanelView.cpp
+    src/ui/views/InfoBarView.cpp
     src/core/network_device.cpp
+    src/core/network_scanner.cpp
     src/core/models/device_list_model.cpp
 )
 
 # Add resource files
 set(RESOURCES
     src/ui/windows/main_window.h
+    src/ui/views/AView.h
+    src/ui/views/ScanResultView.h
+    src/ui/views/ButtonPanelView.h
+    src/ui/views/InfoBarView.h
     src/core/network_device.h
+    src/core/network_scanner.h
     src/core/models/device_list_model.h
 )
 

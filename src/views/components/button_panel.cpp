@@ -1,7 +1,7 @@
-#include "ButtonPanelView.h"
+#include "button_panel.h"
 
-ButtonPanelView::ButtonPanelView(QWidget *parent)
-    : AView(parent),
+ButtonPanel::ButtonPanel(QWidget *parent)
+    : AbstractView(parent),
       scanButton(new QPushButton("Scan", this)),
       pingButton(new QPushButton("Ping", this)),
       exportCsvButton(new QPushButton("Export CSV", this)),
@@ -11,7 +11,7 @@ ButtonPanelView::ButtonPanelView(QWidget *parent)
     setupUI();
 }
 
-void ButtonPanelView::setupUI() {
+void ButtonPanel::setupUI() {
     buttonsLayout->addWidget(scanButton);
     buttonsLayout->addWidget(pingButton);
     buttonsLayout->addWidget(exportCsvButton);

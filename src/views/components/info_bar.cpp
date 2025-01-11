@@ -1,7 +1,7 @@
-#include "InfoBarView.h"
+#include "info_bar.h"
 
-InfoBarView::InfoBarView(QWidget *parent)
-    : AView(parent),
+InfoBar::InfoBar(QWidget *parent)
+    : AbstractView(parent),
       ipLabel(new QLabel("IP: ", this)),
       macLabel(new QLabel("MAC: ", this)),
       otherInfoLabel(new QLabel("Other Info: ", this)),
@@ -12,7 +12,7 @@ InfoBarView::InfoBarView(QWidget *parent)
     infoLayout->setContentsMargins(5, 5, 5, 5);
 }
 
-void InfoBarView::setupUI() {
+void InfoBar::setupUI() {
     infoLayout->addWidget(ipLabel);
     infoLayout->addWidget(macLabel);
     infoLayout->addWidget(otherInfoLabel);

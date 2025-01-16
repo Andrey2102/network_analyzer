@@ -27,35 +27,43 @@ set(CMAKE_AUTORCC ON)
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/core
-    ${CMAKE_SOURCE_DIR}/src/ui
-    ${CMAKE_SOURCE_DIR}/src/ui/view
-    ${CMAKE_SOURCE_DIR}/src/ui/views
-    ${CMAKE_SOURCE_DIR}/src/utils
 )
 
 # Add source files
 set(SOURCES
     src/main.cpp
-    src/ui/windows/main_window.cpp
-    src/ui/views/ScanResultView.cpp
-    src/ui/views/ButtonPanelView.cpp
-    src/ui/views/InfoBarView.cpp
-    src/core/network_device.cpp
-    src/core/network_scanner.cpp
-    src/core/models/device_list_model.cpp
+    # Models
+    src/models/device_list_model.cpp
+    src/models/network_device.cpp
+    # Views
+    src/views/main_window.cpp
+    src/views/abstract/abstract_view.cpp
+    src/views/components/button_panel.cpp
+    src/views/components/info_bar.cpp
+    src/views/components/scan_result.cpp
+    # Controllers
+    src/controllers/device_controller.cpp
+    src/controllers/scan_controller.cpp
+    # Services
+    src/services/network_scanner.cpp
 )
 
 # Add resource files
-set(RESOURCES
-    src/ui/windows/main_window.h
-    src/ui/views/AView.h
-    src/ui/views/ScanResultView.h
-    src/ui/views/ButtonPanelView.h
-    src/ui/views/InfoBarView.h
-    src/core/network_device.h
-    src/core/network_scanner.h
-    src/core/models/device_list_model.h
+set(HEADERS
+    # Models
+    src/models/device_list_model.h
+    src/models/network_device.h
+    # Views
+    src/views/abstract/abstract_view.h
+    src/views/main_window.h
+    src/views/components/button_panel.h
+    src/views/components/info_bar.h
+    src/views/components/scan_result.h
+    # Controllers
+    src/controllers/device_controller.h  
+    src/controllers/scan_controller.h
+    # Services
+    src/services/network_scanner.h
 )
 
 # Add executable

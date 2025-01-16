@@ -1,8 +1,7 @@
 #include "device_list_model.h"
 #include <QDateTime>
 
-DeviceListModel::DeviceListModel(QObject *parent)
-    : QAbstractTableModel(parent)
+DeviceListModel::DeviceListModel(QObject *parent) : QAbstractTableModel(parent)
 {
 }
 
@@ -10,7 +9,7 @@ int DeviceListModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return m_filterString.isEmpty() ? m_devices.size() : m_filteredDevices.size();
+    return m_devices.size();
 }
 
 int DeviceListModel::columnCount(const QModelIndex &parent) const
@@ -22,11 +21,10 @@ int DeviceListModel::columnCount(const QModelIndex &parent) const
 
 QVariant DeviceListModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid())
+    if (!index.isValid() || index.row() >= m_devices.size())
         return QVariant();
 
-    const NetworkDevice &device = m_filterString.isEmpty() ? 
-        m_devices[index.row()] : m_filteredDevices[index.row()];
+    const NetworkDevice &device = m_devices[index.row()];
 
     if (role == Qt::DisplayRole) {
         switch (static_cast<Column>(index.column())) {
@@ -65,27 +63,33 @@ QVariant DeviceListModel::headerData(int section, Qt::Orientation orientation, i
     return QVariant();
 }
 
-void DeviceListModel::addDevice(const NetworkDevice &device)
+void DeviceListModel::setDevices(const QVector<NetworkDevice> &devices)
 {
-    // Check if device already exists
-    auto it = std::find_if(m_devices.begin(), m_devices.end(),
-        [&device](const NetworkDevice &existing) {
-            return existing.getIpAddress() == device.getIpAddress();
-        });
+    beginResetModel();
+    m_devices = devices;
+    endResetModel();
+}
 
-    if (it != m_devices.end()) {
-        updateDevice(device);
-        return;
-    }
-
+void DeviceListModel::addDeviceToModel(const NetworkDevice &device)
+{
     beginInsertRows(QModelIndex(), m_devices.size(), m_devices.size());
     m_devices.append(device);
     endInsertRows();
-
-    updateFilteredDevices();
 }
 
-void DeviceListModel::updateDevice(const NetworkDevice &device)
+void DeviceListModel::removeDeviceFromModel(const QHostAddress &ip)
+{
+    for (int i = 0; i < m_devices.size(); ++i) {
+        if (m_devices[i].getIpAddress() == ip) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_devices.remove(i);
+            endRemoveRows();
+            return;
+        }
+    }
+}
+
+void DeviceListModel::updateDeviceInModel(const NetworkDevice &device)
 {
     for (int i = 0; i < m_devices.size(); ++i) {
         if (m_devices[i].getIpAddress() == device.getIpAddress()) {
@@ -93,86 +97,32 @@ void DeviceListModel::updateDevice(const NetworkDevice &device)
             QModelIndex topLeft = index(i, 0);
             QModelIndex bottomRight = index(i, columnCount() - 1);
             emit dataChanged(topLeft, bottomRight);
-            updateFilteredDevices();
             return;
         }
     }
 }
 
-void DeviceListModel::removeDevice(const QHostAddress &ipAddress)
-{
-    for (int i = 0; i < m_devices.size(); ++i) {
-        if (m_devices[i].getIpAddress() == ipAddress) {
-            beginRemoveRows(QModelIndex(), i, i);
-            m_devices.remove(i);
-            endRemoveRows();
-            updateFilteredDevices();
-            return;
-        }
-    }
-}
-
-void DeviceListModel::clear()
+void DeviceListModel::clearModel()
 {
     beginResetModel();
     m_devices.clear();
-    m_filteredDevices.clear();
     endResetModel();
 }
 
-NetworkDevice DeviceListModel::getDevice(const QModelIndex &index) const
+NetworkDevice DeviceListModel::getDeviceAt(const QModelIndex &index) const
 {
     if (!index.isValid() || index.row() >= m_devices.size())
         return NetworkDevice();
-    
-    return m_filterString.isEmpty() ? 
-        m_devices[index.row()] : m_filteredDevices[index.row()];
+    return m_devices[index.row()];
 }
 
-NetworkDevice DeviceListModel::getDeviceByIp(const QHostAddress &ipAddress) const
+NetworkDevice DeviceListModel::getDeviceByIp(const QHostAddress &ip) const
 {
     auto it = std::find_if(m_devices.begin(), m_devices.end(),
-        [&ipAddress](const NetworkDevice &device) {
-            return device.getIpAddress() == ipAddress;
+        [&ip](const NetworkDevice &device) {
+            return device.getIpAddress() == ip;
         });
-    
     return it != m_devices.end() ? *it : NetworkDevice();
-}
-
-QVector<NetworkDevice> DeviceListModel::getAllDevices() const
-{
-    return m_devices;
-}
-
-void DeviceListModel::setFilterString(const QString &filter)
-{
-    if (m_filterString != filter) {
-        m_filterString = filter;
-        updateFilteredDevices();
-        emit layoutChanged();
-    }
-}
-
-void DeviceListModel::updateFilteredDevices()
-{
-    if (m_filterString.isEmpty()) {
-        m_filteredDevices.clear();
-        return;
-    }
-
-    m_filteredDevices.clear();
-    for (const auto &device : m_devices) {
-        if (deviceMatchesFilter(device)) {
-            m_filteredDevices.append(device);
-        }
-    }
-}
-
-bool DeviceListModel::deviceMatchesFilter(const NetworkDevice &device) const
-{
-    return device.getIpAddress().toString().contains(m_filterString, Qt::CaseInsensitive) ||
-           device.getMacAddress().contains(m_filterString, Qt::CaseInsensitive) ||
-           device.getHostname().contains(m_filterString, Qt::CaseInsensitive);
 }
 
 QString DeviceListModel::columnName(Column column)

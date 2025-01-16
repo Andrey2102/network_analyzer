@@ -2,9 +2,11 @@
 
 InfoBar::InfoBar(QWidget *parent)
     : AbstractView(parent),
-      ipLabel(new QLabel("IP: ", this)),
-      macLabel(new QLabel("MAC: ", this)),
-      otherInfoLabel(new QLabel("Other Info: ", this)),
+      interfaceLabel(new QLabel("Interface Name: N/A", this)),
+      ipLabel(new QLabel("IP: N/A ", this)),
+      macLabel(new QLabel("MAC: N/A ", this)),
+      netLabel(new QLabel("Netmask: N/A ", this)),
+      broadcastLabel(new QLabel("Broadcast Address: N/A ", this)),
       infoLayout(new QHBoxLayout(this))
 {
     setupUI();
@@ -13,8 +15,10 @@ InfoBar::InfoBar(QWidget *parent)
 }
 
 void InfoBar::setupUI() {
+    infoLayout->addWidget(interfaceLabel);
     infoLayout->addWidget(ipLabel);
     infoLayout->addWidget(macLabel);
-    infoLayout->addWidget(otherInfoLabel);
+    infoLayout->addWidget(netLabel);
+    infoLayout->addWidget(broadcastLabel);
     setLayout(infoLayout);
 }

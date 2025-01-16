@@ -150,9 +150,9 @@ void MainWindow::showExportDialog(bool isJson)
 
 void MainWindow::updateInfoBar(const NetworkDevice &device)
 {
-    infoBar->getIpLabel()->setText("IP: " + device.getIpAddress().toString());
-    infoBar->getMacLabel()->setText("MAC: " + device.getMacAddress());
-    infoBar->getOtherInfoLabel()->setText("Status: " + device.getStatusString());
+    // infoBar->getIpLabel()->setText("IP: " + device.getIpAddress().toString());
+    // infoBar->getMacLabel()->setText("MAC: " + device.getMacAddress());
+    // infoBar->getOtherInfoLabel()->setText("Status: " + device.getStatusString());
 }
 
 void MainWindow::createMenus()

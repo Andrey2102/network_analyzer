@@ -1,11 +1,15 @@
 #include "network_scanner.h"
 
+#include <QNetworkInterface>
+#include <QProcess>
+
 NetworkScanner* NetworkScanner::m_instance = nullptr;
 
 NetworkScanner::NetworkScanner(QObject *parent)
     : QObject(parent)
     , m_isScanning(false)
 {
+    scanCurrentDevice();
 }
 
 NetworkScanner::~NetworkScanner()
@@ -18,6 +22,45 @@ NetworkScanner* NetworkScanner::getInstance()
         m_instance = new NetworkScanner();
     }
     return m_instance;
+}
+
+QString NetworkScanner::getActiveLocalInterfaceName() 
+{
+    QProcess process;
+    process.start("sh", QStringList() << "-c" << "ip route show default | awk '/default/ {print $5}'");
+    process.waitForFinished();
+
+    QString output = process.readAllStandardOutput().trimmed();
+    return output;
+}
+
+void NetworkScanner::scanCurrentDevice()
+{
+    QString activeInterfaceName = getActiveLocalInterfaceName();
+    if (activeInterfaceName.isEmpty()) {
+        qInfo() << "No active interface found!";
+        return;
+    }
+
+    const QList<QNetworkInterface>& interfaces = QNetworkInterface::allInterfaces();
+    for (const QNetworkInterface& iface : interfaces) {
+        if (iface.name() == activeInterfaceName) {
+            qInfo() << "Interface Name:" << iface.humanReadableName();
+            qInfo() << "Hardware (MAC) Address:" << iface.hardwareAddress();
+
+            const QList<QNetworkAddressEntry>& entries = iface.addressEntries();
+            for (const QNetworkAddressEntry& entry : entries) {
+                if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol) {
+                    qInfo() << "IPv4 Address:" << entry.ip().toString();
+                    qInfo() << "Netmask:" << entry.netmask().toString();
+                    qInfo() << "Broadcast Address:" << entry.broadcast().toString();
+                }
+            }
+            return; // Завершаем, так как нужный интерфейс найден.
+        }
+    }
+
+    qInfo() << "Active interface" << activeInterfaceName << "not found in system interfaces.";
 }
 
 void NetworkScanner::startScan()

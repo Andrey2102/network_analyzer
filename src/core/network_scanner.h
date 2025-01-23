@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QVector>
 #include <QHostAddress>
+#include <QHostInfo>
+#include <QMutex>
 #include "network_device.h"
 
 class QProcess;
@@ -16,19 +18,24 @@ private:
     static NetworkScanner* _network_scanner;
     
     QVector<NetworkDevice> _devices;
-    QHostAddress _startIp;
-    QHostAddress _endIp;
-    QHostAddress _currentIp;
     bool _isScanning;
     int _currentProgress;
-    QProcess* _process;
+    int lastReportedProgress;
+    const int _maxThreads;
+    int _runningThreads;
+    mutable QMutex _mutex;
+    QHostAddress startIp;
+    QHostAddress endIp;
 
-    void scanNextAddress();
-    void pingHost(const QHostAddress& ip);
+    void scanBatch(const QVector<QHostAddress>& batch);
     QString getMacAddress(const QHostAddress& ip);
+    void updateNetworkInfo();
+    void checkArpCache();
+    bool deviceExists(const QHostAddress& ip);
 
 private slots:
-    void handlePingResult(int exitCode);
+    void handleBatchFinished();
+    void handleHostLookup(const QHostInfo& info);
 
 public:
     ~NetworkScanner();

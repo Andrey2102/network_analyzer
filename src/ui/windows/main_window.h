@@ -25,6 +25,7 @@ private:
     void createToolBar();
     void createStatusBar();
     void setupUI();
+    void setupConnections();
     void createCentralWidget();
 
 private:

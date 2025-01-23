@@ -13,20 +13,37 @@
 #include <QTextEdit>
 
 MainWindow::MainWindow(QWidget *parent)
-   : QMainWindow(parent),
-     scanResultView(new ScanResultView(this)),
-     buttonPanelView(new ButtonPanelView(this)),
-     infoBarView(new InfoBarView(this))
+    : QMainWindow(parent),
+      scanResultView(new ScanResultView(this)),
+      buttonPanelView(new ButtonPanelView(this)),
+      infoBarView(new InfoBarView(this))
 {
-   setupUI();
-   createMenuBar();
-   createToolBar();
-   createStatusBar();
+    setupUI();
+    createMenuBar();
+    createToolBar();
+    createStatusBar();
+    setupConnections();
 }
 
 MainWindow::~MainWindow()
 {
     // Destructor implementation
+}
+
+
+void MainWindow::setupConnections() {
+    // Connect button panel signals to scan result view
+    connect(buttonPanelView, &ButtonPanelView::scanStarted,
+            scanResultView, &ScanResultView::handleScanStarted);
+    
+    connect(buttonPanelView, &ButtonPanelView::scanProgressUpdated,
+            scanResultView, &ScanResultView::handleScanProgress);
+    
+    connect(buttonPanelView, &ButtonPanelView::scanCompleted,
+            scanResultView, &ScanResultView::handleScanCompleted);
+    
+    connect(buttonPanelView, &ButtonPanelView::scanFailed,
+            scanResultView, &ScanResultView::handleScanFailed);
 }
 
 void MainWindow::createMenuBar()

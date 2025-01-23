@@ -1,30 +1,51 @@
-#ifndef _NETWORK_SCANNER_H_
-#define _NETWORK_SCANNER_H_
+#ifndef NETWORK_SCANNER_H
+#define NETWORK_SCANNER_H
 
+#include <QObject>
 #include <QVector>
+#include <QHostAddress>
 #include "network_device.h"
 
-class NetworkScanner
-{
+class QProcess;
+
+class NetworkScanner : public QObject {
+    Q_OBJECT
+
 private:
-    QVector <NetworkDevice> _devices;
-    NetworkDevice _curent_device;
+    NetworkScanner();
+    static NetworkScanner* _network_scanner;
+    
+    QVector<NetworkDevice> _devices;
+    QHostAddress _startIp;
+    QHostAddress _endIp;
+    QHostAddress _currentIp;
+    bool _isScanning;
+    int _currentProgress;
+    QProcess* _process;
 
-    // Private constructor to prevent instantiation
-    NetworkScanner(/* args */);
+    void scanNextAddress();
+    void pingHost(const QHostAddress& ip);
+    QString getMacAddress(const QHostAddress& ip);
+
+private slots:
+    void handlePingResult(int exitCode);
+
+public:
     ~NetworkScanner();
+    static NetworkScanner* getInstance();
+    
+    void startScan(const QString& ipRange);
+    void stopScan();
+    QVector<NetworkDevice> getDevices() const;
 
-    // Delete copy constructor and assignment operator
     NetworkScanner(const NetworkScanner&) = delete;
     NetworkScanner& operator=(const NetworkScanner&) = delete;
 
-    // Static instance of the class
-    static NetworkScanner* _network_scanner;
-
-public:
-    // Static method to get the instance of the class
-    static NetworkScanner* getInstance();
-
+signals:
+    void deviceFound(const NetworkDevice& device);
+    void scanProgress(int progress);
+    void scanFinished();
+    void scanError(const QString& error);
 };
 
-#endif // _NETWORK_SCANNER_H_
+#endif // NETWORK_SCANNER_H

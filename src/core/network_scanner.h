@@ -31,7 +31,13 @@ private:
     QString getMacAddress(const QHostAddress& ip);
     void updateNetworkInfo();
     void checkArpCache();
+    void scanWifiDevices();
+    void checkDhcpLeases();
+    void parseDnsmasqLeases(const QString& content);
+    void parseIscDhcpLeases(const QString& content);
+    QString getIpFromMac(const QString& mac);
     bool deviceExists(const QHostAddress& ip);
+    void scanNetwork();
 
 private slots:
     void handleBatchFinished();

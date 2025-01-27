@@ -42,39 +42,48 @@ void NetworkScanner::updateNetworkInfo() {
 }
 
 void NetworkScanner::startScan(const QString& ipRange) {
+    // Check if a scan is already in progress
     if (_isScanning) {
         return;
     }
 
+    // Initialize scan state
     _isScanning = true;
     _currentProgress = 0;
     lastReportedProgress = 0;
 
+    // Clear the list of devices
     {
         QMutexLocker locker(&_mutex);
         _devices.clear();
     }
 
+    // Step 1: Check ARP cache for devices that have recently communicated
     checkArpCache();
 
+    // Step 2: Generate a list of IP addresses to scan
     QVector<QHostAddress> addresses;
-    quint32 start = startIp.toIPv4Address();
-    quint32 end = endIp.toIPv4Address();
+    quint32 start = startIp.toIPv4Address(); // Start of IP range (e.g., 192.168.1.1)
+    quint32 end = endIp.toIPv4Address();     // End of IP range (e.g., 192.168.1.255)
 
+    // Populate the list with all IPs in the range
     for (quint32 i = start; i <= end; ++i) {
         addresses.append(QHostAddress(i));
     }
 
-    int batchSize = qMax(1, addresses.size() / _maxThreads);
-    _runningThreads = 0;
+    // Step 3: Divide the IP addresses into batches for multi-threaded scanning
+    int batchSize = qMax(1, addresses.size() / _maxThreads); // Calculate batch size
+    _runningThreads = 0; // Reset the running threads counter
 
+    // Process each batch in a separate thread
     for (int i = 0; i < addresses.size(); i += batchSize) {
         QVector<QHostAddress> batch = addresses.mid(i, qMin(batchSize, addresses.size() - i));
-        _runningThreads++;
+        _runningThreads++; // Increment the running threads counter
 
+        // Start a new thread to scan the batch
         QThreadPool::globalInstance()->start([this, batch]() {
-            scanBatch(batch);
-            QMetaObject::invokeMethod(this, "handleBatchFinished", Qt::QueuedConnection);
+            scanBatch(batch); // Scan the batch of IPs
+            QMetaObject::invokeMethod(this, "handleBatchFinished", Qt::QueuedConnection); // Notify when done
         });
     }
 }
@@ -83,7 +92,8 @@ void NetworkScanner::scanBatch(const QVector<QHostAddress>& batch) {
     for (const QHostAddress& ip : batch) {
         if (!_isScanning) return;
 
-        QProcess process;
+        // Step 1: Ping the device
+        QProcess pingProcess;
         QStringList arguments;
 
 #ifdef Q_OS_LINUX
@@ -92,31 +102,49 @@ void NetworkScanner::scanBatch(const QVector<QHostAddress>& batch) {
         arguments << "-n" << "1" << "-w" << "1000" << ip.toString();
 #endif
 
-        process.start("ping", arguments);
-        bool isAlive = process.waitForFinished(1000) && process.exitCode() == 0;
+        pingProcess.start("ping", arguments);
+        bool isAlive = pingProcess.waitForFinished(1000) && pingProcess.exitCode() == 0;
 
+        // Step 2: If the device responds to ping, add it to the list
         if (isAlive) {
-            NetworkDevice device(ip);
+            NetworkDevice device{ip};
             device.setStatus(NetworkDevice::Status::Online);
             device.setLastSeen(QDateTime::currentDateTime());
-            device.setHostname(ip.toString());
 
+            // Step 3: Get the MAC address using ARP
             QString mac = getMacAddress(ip);
             if (!mac.isEmpty()) {
                 device.setMacAddress(mac);
             }
 
+            // Step 4: Add the device to the list (thread-safe)
             {
                 QMutexLocker locker(&_mutex);
-                if (!deviceExists(ip)) {
+                if (!deviceExists(device.getIpAddress())) {
                     _devices.append(device);
-                    emit deviceFound(device);
+                    emit deviceFound(device); // Notify the UI
                 }
             }
 
-            QHostInfo::lookupHost(ip.toString(), this, SLOT(handleHostLookup(QHostInfo)));
+            // Step 5: Get the hostname using QHostInfo
+            QHostInfo::lookupHost(ip.toString(), this, [this, ip](const QHostInfo& hostInfo) {
+                if (hostInfo.error() == QHostInfo::NoError) {
+                    QString hostname = hostInfo.hostName();
+
+                    // Update the device with the hostname
+                    QMutexLocker locker(&_mutex);
+                    for (NetworkDevice& device : _devices) {
+                        if (device.getIpAddress() == ip) {
+                            device.setHostname(hostname);
+                            emit deviceFound(device); // Notify the UI
+                            break;
+                        }
+                    }
+                }
+            });
         }
 
+        // Step 6: Update the scan progress (thread-safe)
         {
             QMutexLocker locker(&_mutex);
             _currentProgress++;
@@ -124,7 +152,7 @@ void NetworkScanner::scanBatch(const QVector<QHostAddress>& batch) {
             int progress = (_currentProgress * 100) / totalIps;
             if (progress != lastReportedProgress) {
                 lastReportedProgress = progress;
-                emit scanProgress(progress);
+                emit scanProgress(progress); // Notify the UI
             }
         }
     }
@@ -154,28 +182,36 @@ void NetworkScanner::handleBatchFinished() {
 }
 
 void NetworkScanner::checkArpCache() {
-    QFile arpCache("/proc/net/arp");
+    QFile arpCache("/proc/net/arp"); // Path to ARP cache on Linux
     if (!arpCache.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return;
     }
 
     QTextStream in(&arpCache);
-    QString line = in.readLine(); // Skip header
+    QString line = in.readLine(); // Skip the header line
 
+    // Parse each line in the ARP cache
     while (!in.atEnd()) {
         line = in.readLine();
         QStringList fields = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
-        
-        if (fields.size() >= 4 && fields[2] == "0x2") {
-            QHostAddress ip(fields[0]);
-            if (!deviceExists(ip)) {
-                NetworkDevice device(ip);
-                device.setMacAddress(fields[3]);
-                device.setHostname(fields[0]);
-                device.setStatus(NetworkDevice::Status::Online);
-                device.setLastSeen(QDateTime::currentDateTime());
-                _devices.append(device);
-                emit deviceFound(device);
+
+        // Check if the line contains valid ARP data
+        if (fields.size() >= 4 && fields[2] == "0x2") { // 0x2 means "reachable"
+            QHostAddress ip(fields[0]); // IP address
+            QString mac = fields[3];    // MAC address
+
+            // Create a device and add it to the list
+            NetworkDevice device{ip};
+            device.setMacAddress(mac);
+            device.setStatus(NetworkDevice::Status::Online);
+            device.setLastSeen(QDateTime::currentDateTime());
+
+            {
+                QMutexLocker locker(&_mutex);
+                if (!deviceExists(device.getIpAddress())) {
+                    _devices.append(device);
+                    emit deviceFound(device); // Notify the UI
+                }
             }
         }
     }
@@ -183,11 +219,11 @@ void NetworkScanner::checkArpCache() {
 
 QString NetworkScanner::getMacAddress(const QHostAddress& ip) {
     QProcess arpProcess;
-    
+
 #ifdef Q_OS_LINUX
-    arpProcess.start("arp", QStringList() << "-n" << ip.toString());
+    arpProcess.start("arp", QStringList() << "-n" << ip.toString()); // Linux arp command
 #else
-    arpProcess.start("arp", QStringList() << "-a" << ip.toString());
+    arpProcess.start("arp", QStringList() << "-a" << ip.toString()); // Windows arp command
 #endif
 
     if (!arpProcess.waitForFinished(500)) {
@@ -195,10 +231,11 @@ QString NetworkScanner::getMacAddress(const QHostAddress& ip) {
         return QString();
     }
 
+    // Parse the output to find the MAC address
     QString output = QString::fromLocal8Bit(arpProcess.readAllStandardOutput());
     QRegularExpression macRegex("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})");
     QRegularExpressionMatch match = macRegex.match(output);
-    
+
     return match.hasMatch() ? match.captured(0) : QString();
 }
 
@@ -216,4 +253,53 @@ void NetworkScanner::stopScan() {
 QVector<NetworkDevice> NetworkScanner::getDevices() const {
     QMutexLocker locker(&_mutex);
     return _devices;
+}
+
+void NetworkScanner::scanNetwork() {
+    quint32 start = startIp.toIPv4Address();
+    quint32 end = endIp.toIPv4Address();
+
+    for (quint32 i = start; i <= end; ++i) {
+        if (!_isScanning) break;
+
+        QHostAddress ip(i);
+
+        // Ping устройство
+        QProcess pingProcess;
+        pingProcess.start("ping", QStringList() << "-c" << "1" << "-W" << "1" << ip.toString());
+
+        bool isAlive = pingProcess.waitForFinished(1000) && pingProcess.exitCode() == 0;
+
+        if (isAlive) {
+            // Устройство ответило на ping
+            NetworkDevice device{ip};
+            device.setStatus(NetworkDevice::Status::Online);
+            device.setLastSeen(QDateTime::currentDateTime());
+
+            // Получаем MAC-адрес через ARP
+            QString mac = getMacAddress(ip);
+            if (!mac.isEmpty()) {
+                device.setMacAddress(mac);
+            }
+
+            {
+                QMutexLocker locker(&_mutex);
+                if (!deviceExists(device.getIpAddress())) {
+                    _devices.append(device);
+                    emit deviceFound(device);
+                }
+            }
+        }
+
+        {
+            QMutexLocker locker(&_mutex);
+            _currentProgress++;
+            int totalIps = end - start + 1;
+            int progress = (_currentProgress * 100) / totalIps;
+            if (progress != lastReportedProgress) {
+                lastReportedProgress = progress;
+                emit scanProgress(progress);
+            }
+        }
+    }
 }

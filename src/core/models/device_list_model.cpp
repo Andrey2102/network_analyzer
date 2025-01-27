@@ -20,12 +20,11 @@ int DeviceListModel::columnCount(const QModelIndex &parent) const
     return Column::ColumnCount;
 }
 
-QVariant DeviceListModel::data(const QModelIndex &index, int role) const
-{
+QVariant DeviceListModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
 
-    const NetworkDevice &device = m_filterString.isEmpty() ? 
+    const NetworkDevice& device = m_filterString.isEmpty() ? 
         m_devices[index.row()] : m_filteredDevices[index.row()];
 
     if (role == Qt::DisplayRole) {
@@ -35,7 +34,7 @@ QVariant DeviceListModel::data(const QModelIndex &index, int role) const
             case Column::MacAddress:
                 return device.getMacAddress();
             case Column::Hostname:
-                return device.getHostname();
+                return device.getHostname(); // Отображаем hostname
             case Column::Status:
                 return device.getStatusString();
             case Column::LastSeen:

@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , buttonPanel(new ButtonPanel(this))
     , infoBar(new InfoBar(this))
     , deviceController(new DeviceController(this))
-    , scanController(new ScanController(deviceController, this))
+    , scanController(new ScanController(deviceController, infoBar, this))
 {
     setupUI();
     createMenus();

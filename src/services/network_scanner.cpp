@@ -9,7 +9,6 @@ NetworkScanner::NetworkScanner(QObject *parent)
     : QObject(parent)
     , m_isScanning(false)
 {
-    scanCurrentDevice();
 }
 
 NetworkScanner::~NetworkScanner()
@@ -34,7 +33,7 @@ QString NetworkScanner::getActiveLocalInterfaceName()
     return output;
 }
 
-void NetworkScanner::scanCurrentDevice()
+void NetworkScanner::scanCurrentDevice(CurrentNetworkDevice *device)
 {
     QString activeInterfaceName = getActiveLocalInterfaceName();
     if (activeInterfaceName.isEmpty()) {
@@ -45,18 +44,19 @@ void NetworkScanner::scanCurrentDevice()
     const QList<QNetworkInterface>& interfaces = QNetworkInterface::allInterfaces();
     for (const QNetworkInterface& iface : interfaces) {
         if (iface.name() == activeInterfaceName) {
-            qInfo() << "Interface Name:" << iface.humanReadableName();
-            qInfo() << "Hardware (MAC) Address:" << iface.hardwareAddress();
+            device->setInterfaceName(iface.humanReadableName());
+            device->setMacAddress(iface.hardwareAddress());
 
             const QList<QNetworkAddressEntry>& entries = iface.addressEntries();
             for (const QNetworkAddressEntry& entry : entries) {
                 if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol) {
-                    qInfo() << "IPv4 Address:" << entry.ip().toString();
-                    qInfo() << "Netmask:" << entry.netmask().toString();
-                    qInfo() << "Broadcast Address:" << entry.broadcast().toString();
+                    device->setIpAddress(entry.ip().toString());
+                    device->setNetmask(entry.netmask().toString());
+                    device->setBroadcastAddress(entry.broadcast().toString());
                 }
             }
-            return; // Завершаем, так как нужный интерфейс найден.
+            emit(currentDeviceUpdated());
+            return; // Found the active interface
         }
     }
 

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVector>
+#include "models/current_network_device.h"
 #include "models/network_device.h"
 
 // Make it inherit from QObject to support signals
@@ -12,6 +13,7 @@ class NetworkScanner : public QObject
 
 signals:
     // Signals that scan controller will listen to
+    void currentDeviceUpdated();
     void deviceFound(const NetworkDevice &device);
     void scanComplete();
     void scanError(const QString &error);
@@ -22,7 +24,7 @@ public:
     static NetworkScanner* getInstance();
 
     // Scanning methods
-    void scanCurrentDevice();
+    void scanCurrentDevice(CurrentNetworkDevice *device);
     void startScan();
     void stopScan();
     void pingDevice(const QHostAddress &address);

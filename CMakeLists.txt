@@ -33,6 +33,7 @@ include_directories(
 set(SOURCES
     src/main.cpp
     # Models
+    src/models/current_network_device.cpp
     src/models/device_list_model.cpp
     src/models/network_device.cpp
     # Views
@@ -51,6 +52,7 @@ set(SOURCES
 # Add resource files
 set(HEADERS
     # Models
+    src/models/current_network_device.h
     src/models/device_list_model.h
     src/models/network_device.h
     # Views

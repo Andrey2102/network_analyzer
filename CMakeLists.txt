@@ -19,6 +19,9 @@ endif()
 # Find Qt packages
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
+# Find Boost packages
+find_package(Boost REQUIRED COMPONENTS system)
+
 # Set automatic MOC, UIC, and RCC processing
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -79,6 +82,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network
+)
+
+# Link Boost libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Boost::system pthread
 )
 
 # Enable testing

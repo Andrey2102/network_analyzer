@@ -1,5 +1,8 @@
 #include "network_scanner.h"
 
+#include <QNetworkInterface>
+#include <QProcess>
+
 NetworkScanner* NetworkScanner::m_instance = nullptr;
 
 NetworkScanner::NetworkScanner(QObject *parent)
@@ -18,6 +21,46 @@ NetworkScanner* NetworkScanner::getInstance()
         m_instance = new NetworkScanner();
     }
     return m_instance;
+}
+
+QString NetworkScanner::getActiveLocalInterfaceName() 
+{
+    QProcess process;
+    process.start("sh", QStringList() << "-c" << "ip route show default | awk '/default/ {print $5}'");
+    process.waitForFinished();
+
+    QString output = process.readAllStandardOutput().trimmed();
+    return output;
+}
+
+void NetworkScanner::scanCurrentDevice(CurrentNetworkDevice *device)
+{
+    QString activeInterfaceName = getActiveLocalInterfaceName();
+    if (activeInterfaceName.isEmpty()) {
+        qInfo() << "No active interface found!";
+        return;
+    }
+
+    const QList<QNetworkInterface>& interfaces = QNetworkInterface::allInterfaces();
+    for (const QNetworkInterface& iface : interfaces) {
+        if (iface.name() == activeInterfaceName) {
+            device->setInterfaceName(iface.humanReadableName());
+            device->setMacAddress(iface.hardwareAddress());
+
+            const QList<QNetworkAddressEntry>& entries = iface.addressEntries();
+            for (const QNetworkAddressEntry& entry : entries) {
+                if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol) {
+                    device->setIpAddress(entry.ip().toString());
+                    device->setNetmask(entry.netmask().toString());
+                    device->setBroadcastAddress(entry.broadcast().toString());
+                }
+            }
+            emit(currentDeviceUpdated());
+            return; // Found the active interface
+        }
+    }
+
+    qInfo() << "Active interface" << activeInterfaceName << "not found in system interfaces.";
 }
 
 void NetworkScanner::startScan()

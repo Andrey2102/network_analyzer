@@ -4,13 +4,15 @@
 #include <QObject>
 #include "device_controller.h"
 #include "../services/network_scanner.h"
+#include "../models/current_network_device.h"
+#include "../views/components/info_bar.h"
 
 class ScanController : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ScanController(DeviceController *deviceController, QObject *parent = nullptr);
+    explicit ScanController(DeviceController *deviceController, InfoBar *infoBar, QObject *parent = nullptr);
     ~ScanController();
 
     void startScan();
@@ -28,8 +30,11 @@ private slots:
     void handleDeviceFound(const NetworkDevice &device);
     void handleScanError(const QString &error);
     void handleScanComplete();
+    void handleCurrentDeviceUpdated();
 
 private:
+    InfoBar *m_infoBar;
+    CurrentNetworkDevice *m_currentDevice;
     DeviceController *m_deviceController;
     NetworkScanner *m_networkScanner;
 };

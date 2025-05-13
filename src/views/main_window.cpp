@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , buttonPanel(new ButtonPanel(this))
     , infoBar(new InfoBar(this))
     , deviceController(new DeviceController(this))
-    , scanController(new ScanController(deviceController, this))
+    , scanController(new ScanController(deviceController, infoBar, this))
 {
     setupUI();
     createMenus();
@@ -150,9 +150,9 @@ void MainWindow::showExportDialog(bool isJson)
 
 void MainWindow::updateInfoBar(const NetworkDevice &device)
 {
-    infoBar->getIpLabel()->setText("IP: " + device.getIpAddress().toString());
-    infoBar->getMacLabel()->setText("MAC: " + device.getMacAddress());
-    infoBar->getOtherInfoLabel()->setText("Status: " + device.getStatusString());
+    // infoBar->getIpLabel()->setText("IP: " + device.getIpAddress().toString());
+    // infoBar->getMacLabel()->setText("MAC: " + device.getMacAddress());
+    // infoBar->getOtherInfoLabel()->setText("Status: " + device.getStatusString());
 }
 
 void MainWindow::createMenus()
